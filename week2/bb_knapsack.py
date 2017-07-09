@@ -2,6 +2,7 @@
 import Queue
 from collections import namedtuple
 import numpy as np
+import heapq
 
 class Node(object):
     def __init__(self, level, value, weight, taken):
@@ -63,7 +64,7 @@ class Knapsack(object):
         return value
 
 
-    def solve(self):
+    def solve(self, stype="best", check="full"):
         root = Node(0, 0, 0, [])
         best = root
         best_lb = self._greedy(0, 0, 0, [])
@@ -71,10 +72,36 @@ class Knapsack(object):
         best_ubv = self._linear_relaxation(0, 0, 0)
         # placeholder for non-binary trees
         options = [0]
-        stack = [root]
-        while len(stack) > 0:
+
+        if stype == "depth":
+            el = [root]
+            def push(i, p=None):
+                el.append(i)
+
+            def pop():
+                return el.pop()
+        elif stype == "breadth":
+            el = [root]
+            def push(i, p=None):
+                el.append(i)
+
+            def pop():
+                return el.pop(0)
+        elif stype == "best":
+            # assume maximization
+            el = [(0, root)]
+            heapq.heapify(el)
+            def push(i, p=None):
+                heapq.heappush(el, (-p, i))
+
+            def pop():
+                return heapq.heappop(el)[1]
+        else:
+            raise ValueError("Unknown solver type")
+
+        while len(el) > 0:
             for o in range(len(options)):
-                current = stack.pop()
+                current = pop()
                 index = current.level
 
                 if current.value >= best.value:
@@ -91,31 +118,37 @@ class Knapsack(object):
                             best = take
                             best_lb = self._greedy(index + 1, best.value, best.weight, best.taken)
                             best_lbv = best_lb.value
-                        lb = self._greedy(index + 1, take.value, take.weight, list(taken))
-                        lbv = lb.value
+                            lb = best_lb
+                            lbv = best_lbv
+                        else:
+                            lb = self._greedy(index + 1, take.value, take.weight, list(taken))
+                            lbv = lb.value
+
                         if lbv >= best_lbv:
+                            best = take
                             best_lb = lb
                             best_lbv = lbv
-                            stack.append(take)
-                        else:
+                            push(take, lbv)
+                        elif check != "min":
                             ubv = self._linear_relaxation(index + 1, take.value, take.weight)
-                            if ubv <= best_ubv:
+                            if ubv >= best_ubv:
                                 best_ubv = ubv
-                                stack.append(take)
+                                push(take, lbv)
 
                     not_taken = list(current.taken)
                     dont = Node(index + 1, current.value, current.weight, list(not_taken))
                     lb = self._greedy(index + 1, dont.value, dont.weight, list(not_taken))
                     lbv = lb.value
                     if lbv >= best_lbv:
+                        best = dont
                         best_lb = lb
                         best_lbv = lbv
-                        stack.append(dont)
-                    else:
+                        push(dont, lbv)
+                    elif check != "min":
                         ubv = self._linear_relaxation(index + 1, dont.value, dont.weight)
-                        if ubv <= best_ubv:
+                        if ubv >= best_ubv:
                             best_ubv = ubv
-                            stack.append(dont)
+                            push(dont, lbv)
         return best
 
 
