@@ -68,6 +68,7 @@ class Knapsack(object):
         best = root
         best_lb = self._greedy(0, 0, 0, [])
         best_lbv = best_lb.value
+        best_ubv = self._linear_relaxation(0, 0, 0)
         # placeholder for non-binary trees
         options = [0]
         stack = [root]
@@ -92,26 +93,29 @@ class Knapsack(object):
                             best_lbv = best_lb.value
                         lb = self._greedy(index + 1, take.value, take.weight, list(taken))
                         lbv = lb.value
-                        # ubv only for best first instead of depth
-                        #ubv = self._linear_relaxation(index + 1, take.value, take.weight)
                         if lbv >= best_lbv:
                             best_lb = lb
                             best_lbv = lbv
                             stack.append(take)
-                        #elif ubv >= best_lbv:
-                        #    stack.append(take)
+                        else:
+                            ubv = self._linear_relaxation(index + 1, take.value, take.weight)
+                            if ubv <= best_ubv:
+                                best_ubv = ubv
+                                stack.append(take)
 
                     not_taken = list(current.taken)
                     dont = Node(index + 1, current.value, current.weight, list(not_taken))
                     lb = self._greedy(index + 1, dont.value, dont.weight, list(not_taken))
                     lbv = lb.value
-                    #ubv = self._linear_relaxation(index + 1, dont.value, dont.weight)
                     if lbv >= best_lbv:
                         best_lb = lb
                         best_lbv = lbv
                         stack.append(dont)
-                    #elif ubv >= best_lbv:
-                    #    stack.append(dont)
+                    else:
+                        ubv = self._linear_relaxation(index + 1, dont.value, dont.weight)
+                        if ubv <= best_ubv:
+                            best_ubv = ubv
+                            stack.append(dont)
         return best
 
 
