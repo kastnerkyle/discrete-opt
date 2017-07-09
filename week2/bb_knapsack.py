@@ -64,7 +64,7 @@ class Knapsack(object):
         return value
 
 
-    def solve(self, stype="best", check="full"):
+    def solve(self, stype="best"):
         root = Node(0, 0, 0, [])
         best = root
         best_lb = self._greedy(0, 0, 0, [])
@@ -129,7 +129,7 @@ class Knapsack(object):
                             best_lb = lb
                             best_lbv = lbv
                             push(take, lbv)
-                        elif check != "min":
+                        else:
                             ubv = self._linear_relaxation(index + 1, take.value, take.weight)
                             if ubv >= best_ubv:
                                 best_ubv = ubv
@@ -144,7 +144,7 @@ class Knapsack(object):
                         best_lb = lb
                         best_lbv = lbv
                         push(dont, lbv)
-                    elif check != "min":
+                    else:
                         ubv = self._linear_relaxation(index + 1, dont.value, dont.weight)
                         if ubv >= best_ubv:
                             best_ubv = ubv
