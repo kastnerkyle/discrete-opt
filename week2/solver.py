@@ -22,8 +22,14 @@ def solve_it(input_data):
     weights = tuple(weights)
     values = tuple(values)
 
-    from dp_knapsack import solve_dp
-    r = solve_dp(weights, values, capacity)
+    #from dp_knapsack import solve_dp
+    #r = solve_dp(weights, values, capacity)
+    from bb_knapsack import Knapsack
+    k = Knapsack(values, weights, capacity)
+    r = k.solve()
+    #print(capacity, r.weight)
+    assert r.weight <= capacity
+    r = (r.value, r.taken)
 
     value = r[0]
     indices = r[1]
