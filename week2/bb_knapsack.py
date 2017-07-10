@@ -64,7 +64,7 @@ class Knapsack(object):
         return value
 
 
-    def solve(self, stype="best"):
+    def solve(self, stype="depth"):
         root = Node(0, 0, 0, [])
         best = root
         best_lb = self._greedy(0, 0, 0, [])
